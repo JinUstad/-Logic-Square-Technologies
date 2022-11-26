@@ -1,0 +1,115 @@
+<html>
+<style>
+    table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td,
+    th {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+
+    tr:nth-child(even) {
+        background-color: #dddddd;
+    }
+</style>
+
+<body>
+    <h1>Califoria Cafe Directory</h1>
+    <input id="searchTxt" type="text" onkeyup="filterDate()" placeholder="Search your favourite cafes!">
+    <br>
+    <br>
+    <br>
+    <table id="tableBody">
+    </table>
+
+
+    <script>
+        const cafeUrl = 'https://raw.githubusercontent.com/debojyoti/places-fake-rest-api/master/cafes.json',
+            placeUrl = 'https://raw.githubusercontent.com/debojyoti/places-fake-rest-api/master/places.json';
+        let cafeArr = [], placeArr = [];
+
+        let tableRows = '';
+
+        async function fetchCafe() {
+            const resp = await fetch(cafeUrl);
+            const data = await resp.json()
+            cafeArr = data.error ? [] : data.cafes;
+        }
+
+        async function fetchPlaces() {
+            const resp = await fetch(placeUrl);
+            const data = await resp.json()
+            placeArr = data.error ? [] : data.places;
+        }
+
+        function searchFunction(cafeArr, placeArr, str) {
+            const searchResult = [];
+            for (const cafe of cafeArr) {
+                if ((cafe.name).toLowerCase().includes(str.toLowerCase())) {
+                    for (const place of placeArr) {
+                        if (cafe.location_id === place.id) {
+                            const obj = {
+                                ...cafe, ...place
+                            }
+                            delete obj.location_id;
+                            delete obj.id;
+                            searchResult.push(obj)
+                        }
+                    }
+                }
+            }
+
+            return searchResult;
+        }
+
+        async function loadInitial() {
+            await fetchCafe();
+            await fetchPlaces();
+            const data = searchFunction(cafeArr, placeArr, '');
+            renderRows(data);
+        }
+
+        loadInitial();
+
+        function filterDate() {
+            const txt = document.getElementById("searchTxt").value;
+            const data = searchFunction(cafeArr, placeArr, txt);
+            renderRows(data);
+        }
+
+        function renderRows(data) {
+            tableRows = `
+            <tr>
+                <th>S No</th>
+                <th>Cafe Name</th>
+                <th>Address</th>
+                <th>Postal Code</th>
+                <th>Lat</th>
+                <th>Long</th>
+            </tr>`
+            for (const ind in data) {
+                tableRows = tableRows +
+                    `<tr>
+                        <td>${+ind + 1}</td>
+                        <td>${data[ind].name}</td>
+                        <td>${data[ind].street_no} ${data[ind].locality}</td>
+                        <td>${data[ind].postal_code}</td>
+                        <td>${data[ind].lat}</td>
+                        <td>${data[ind].long}</td>
+                    </tr></br>`
+            }
+            document.getElementById("tableBody").innerHTML = tableRows;
+        }
+
+
+
+    </script>
+
+</body>
+
+</html>
